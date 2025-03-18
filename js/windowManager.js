@@ -244,7 +244,7 @@ const createMinerWindow = () => {
   const content = `
     <div class="terminal">
       <div class="terminal-output" id="terminal-output">
-        <div class="terminal-line">Welcome to CryptoSurge Miner v1.3.7</div>
+        <div class="terminal-line">Welcome to CryptoSurge Miner v1.3.8</div>
         <div class="terminal-line">Type 'help' for available commands</div>
         <div class="terminal-line">------------------------------------</div>
         <div class="terminal-line terminal-status">GETTING STARTED:</div>
