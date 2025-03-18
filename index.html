@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CodeBreak: Botnet Domination</title>
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+  <!-- Main game container -->
+  <div class="desktop" id="desktop">
+    <!-- Windows will be dynamically created here -->
+    <div class="notification-container" id="notification-container"></div>
+  </div>
+  
+  <!-- Taskbar with application buttons -->
+  <div class="taskbar">
+    <div class="taskbar-button" id="open-miner">Personal Miner</div>
+    <div class="taskbar-button" id="open-hack-console">Hack Console</div>
+    <div class="taskbar-button" id="open-botnet">Botnet Control</div>
+    <div class="taskbar-button" id="open-wallet">Crypto Wallet</div>
+    <div class="taskbar-button" id="open-upgrades">Upgrade Store</div>
+    <div class="taskbar-button" id="open-performance">System Performance</div>
+    <div class="taskbar-button" id="open-settings">Settings</div>
+    
+    <div class="taskbar-stats">
+      <div id="taskbar-pa">PA/s: 0.0</div>
+      <div id="taskbar-cc">CC/s: 0.0</div>
+    </div>
+  </div>
+
+  <!-- JavaScript files in correct load order -->
+  <script src="js/config.js"></script>
+  <script src="js/data.js"></script>
+  <script src="js/windowManager.js"></script>
+  <script src="js/gameLogic.js"></script>
+  <script src="js/uiManager.js"></script>
+  <script src="js/browserManager.js"></script>
+  <script src="js/minerManager.js"></script>
+  <script src="js/saveManager.js"></script>
+  <script src="js/main.js"></script>
+</body>
+</html>
