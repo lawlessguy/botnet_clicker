@@ -130,9 +130,6 @@ const gameLoop = () => {
     }
   }
   
-  if (uiState.windows.systemPerformance.isOpen) {
-    updatePerformanceWindow();
-  }
   
   // If botnet window is open, periodically refresh it to ensure miners update
   if (uiState.windows.botnetControl.isOpen) {

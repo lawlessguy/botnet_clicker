@@ -305,7 +305,7 @@ const applyUpgradeEffect = (upgrade) => {
       gameState.boostUpgrade += upgrade.effectValue;
       break;
     case "botnetMultiplier":
-      gameState.botnetMultiplier *= upgrade.effectValue;
+      gameState.multiplierUpgrade *= upgrade.effectValue;
       // This is applied when calculating resource rates
       break;
     case "instantCrack":
