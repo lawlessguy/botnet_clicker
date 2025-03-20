@@ -14,6 +14,14 @@ const gameState = {
   userGPU: 0,
   masterKeyTokens: 0,
   totalPAThisRun: 0,
+  // Hacking Efficiency
+  hackingEfficiency: 1,
+  // Botnet Boost Additive
+  boostUpgrade: 0,
+  // Botnet multiplier
+  multiplierUpgrade: 1,
+  // total botnet multiplier
+  totalBotMulti: 1,
   pausedHackingProgress: {},
   lastTimestamp: Date.now(),
   transactions: [],

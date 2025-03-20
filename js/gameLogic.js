@@ -177,8 +177,7 @@ const clickHack = () => {
       current.effectValue > best.effectValue ? current : best, instantCrackUpgrades[0]);
     
     if (Math.random() < bestInstantCrack.effectValue) {
-      const hackingEfficiency = calculateHackingEfficiency();
-      device.currentProgress = device.requiredAttempts * hackingEfficiency;
+      device.currentProgress = device.requiredAttempts * gameState.hackingEfficiency;
       createNotification("Instant Crack!", `Password database hit! ${device.name} instantly compromised.`, "upgrade-purchased");
     }
   }
@@ -192,8 +191,7 @@ const clickHack = () => {
   gameState.hacking.progressCounter += clickPaAmount;
   
   // Check if device is now compromised
-  const hackingEfficiency = calculateHackingEfficiency();
-  const requiredAttempts = device.requiredAttempts * hackingEfficiency;
+  const requiredAttempts = device.requiredAttempts * gameState.hackingEfficiency;
   
   if (device.currentProgress >= requiredAttempts) {
     // Mark as compromised
@@ -300,12 +298,14 @@ const applyUpgradeEffect = (upgrade) => {
       gameState.userGPU += upgrade.effectValue;
       break;
     case "hackingEfficiency":
+      gameState.hackingEfficiency -= upgrade.effectValue; 
       // This is applied when calculating required attempts
       break;
     case "botnetBoost":
-      // This is applied when calculating resource rates
+      gameState.boostUpgrade += upgrade.effectValue;
       break;
     case "botnetMultiplier":
+      gameState.botnetMultiplier *= upgrade.effectValue;
       // This is applied when calculating resource rates
       break;
     case "instantCrack":
@@ -320,6 +320,7 @@ const applyUpgradeEffect = (upgrade) => {
       gameState.miningEfficiencyMultiplier = upgrade.effectValue;
       break;
   }
+  gameState.totalBotMulti = calculateBotnetMultiplier();
 };
 
 /**
@@ -378,43 +379,21 @@ const prestigeReset = () => {
 };
 
 /**
- * Calculates the hacking efficiency based on upgrades
- * @returns {number} - Efficiency multiplier (lower is better)
- */
-const calculateHackingEfficiency = () => {
-  let efficiency = 1;
-  
-  // Apply efficiency upgrades
-  const efficiencyUpgrade = upgradeDefinitions.find(u => u.id === 1 && u.purchased);
-  if (efficiencyUpgrade) {
-    efficiency -= efficiencyUpgrade.effectValue; // 10% reduction in required attempts
-  }
-  
-  return efficiency;
-};
-
-/**
  * Calculates the botnet performance multiplier
  * @returns {number} - The multiplier value
  */
 const calculateBotnetMultiplier = () => {
   let multiplier = 1;
-  
-  // Apply botnet boost upgrades
-  const boostUpgrade = upgradeDefinitions.find(u => u.id === 2 && u.purchased);
-  if (boostUpgrade) {
-    multiplier += boostUpgrade.effectValue; // +20% to all compromised devices
+  // Apply botnet boost upgrades 
+  if (gameState.boostUpgrade > 0) {
+    multiplier += gameState.boostUpgrade;
   }
-  
   // Apply botnet multiplier upgrades
-  const multiplierUpgrade = upgradeDefinitions.find(u => u.id === 6 && u.purchased);
-  if (multiplierUpgrade) {
-    multiplier *= multiplierUpgrade.effectValue; // Double output
+  if (gameState.multiplierUpgrade) {
+    multiplier *= gameState.multiplierUpgrade; // Double output
   }
-  
   // Apply master key tokens
   multiplier *= (1 + (gameState.masterKeyTokens * 0.1)); // +10% per token
-  
   return multiplier;
 };
 
@@ -450,7 +429,7 @@ const calculateTotalGPU = () => {
  */
 const calculateResourceRates = () => {
   // Calculate boosts
-  const botnetMultiplier = calculateBotnetMultiplier();
+  const botnetMultiplier = gameState.totalBotMulti;
   
   // Calculate CPU power for Password Attempts
   const botnetCPU = allDevices
