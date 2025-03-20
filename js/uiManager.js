@@ -207,7 +207,6 @@ const updatePerformanceWindow = () => {
   // Calculate resource rates
   const resourceRates = calculateResourceRates();
   const botnetMultiplier = gameState.totalBotMulti;
-  console.log(botnetMultiplier);
   
   // Update PA breakdown
   const botnetPaElement = document.getElementById("botnet-pa");
