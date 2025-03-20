@@ -15,12 +15,10 @@ const updateHackConsole = () => {
   // Get purchased and uncompromised devices only
   const hackableDevices = allDevices.filter(device => device.isPurchased && !device.isCompromised);
   
-  // Calculate hacking efficiency
-  const hackingEfficiency = calculateHackingEfficiency();
-  
+
   // Add each device to the list
   hackableDevices.forEach(device => {
-    const adjustedRequired = Math.ceil(device.requiredAttempts * hackingEfficiency);
+    const adjustedRequired = Math.ceil(device.requiredAttempts * gameState.hackingEfficiency);
     
     const deviceElement = document.createElement("div");
     deviceElement.className = `target-item ${device.id === gameState.selectedTargetId ? "selected" : ""}`;
@@ -80,8 +78,7 @@ const updateHackProgress = () => {
   
   if (selectedDevice) {
     // Calculate hacking efficiency
-    const hackingEfficiency = calculateHackingEfficiency();
-    const adjustedRequired = Math.ceil(selectedDevice.requiredAttempts * hackingEfficiency);
+    const adjustedRequired = Math.ceil(selectedDevice.requiredAttempts * gameState.hackingEfficiency);
     const currentProgress = Math.floor(selectedDevice.currentProgress);
     
     const progressPercent = (selectedDevice.currentProgress / adjustedRequired) * 100;
@@ -209,7 +206,7 @@ const updatePerformanceWindow = () => {
   
   // Calculate resource rates
   const resourceRates = calculateResourceRates();
-  const botnetMultiplier = calculateBotnetMultiplier();
+  const botnetMultiplier = gameState.totalBotMulti;
   
   // Update PA breakdown
   const botnetPaElement = document.getElementById("botnet-pa");

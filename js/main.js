@@ -53,8 +53,7 @@ const gameLoop = () => {
       }
       
       // Check if device is now compromised
-      const hackingEfficiency = calculateHackingEfficiency();
-      const requiredAttempts = selectedDevice.requiredAttempts * hackingEfficiency;
+      const requiredAttempts = selectedDevice.requiredAttempts * gameState.hackingEfficiency;
       
       if (selectedDevice.currentProgress >= requiredAttempts) {
         // Mark as compromised
@@ -131,9 +130,6 @@ const gameLoop = () => {
     }
   }
   
-  if (uiState.windows.systemPerformance.isOpen) {
-    updatePerformanceWindow();
-  }
   
   // If botnet window is open, periodically refresh it to ensure miners update
   if (uiState.windows.botnetControl.isOpen) {
@@ -146,7 +142,7 @@ const gameLoop = () => {
   if (now % 1000 < 20) { // Every ~1 second
     updateAllWindows();
   }
-  
+
   requestAnimationFrame(gameLoop);
 };
 
