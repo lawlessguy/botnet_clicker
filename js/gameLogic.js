@@ -349,6 +349,10 @@ const prestigeReset = () => {
     gameState.totalPAThisRun = 0;
     gameState.pausedHackingProgress = {};
     gameState.transactions = [];
+    gameState.multiplierUpgrade = 1;
+    gameState.boostUpgrade = 0;
+    gameState.hackingEfficiency = 1;
+    gameState.totalBotMulti = calculateBotnetMultiplier();
     
     // Reset miner statistics
     gameState.miner.totalMined = 0;
@@ -367,6 +371,7 @@ const prestigeReset = () => {
     upgradeDefinitions.forEach(upgrade => {
       upgrade.purchased = false;
     });
+
     
     // Add transaction for prestige
     addTransaction("Global Master Key Activated", "+1 Master Key Token");
