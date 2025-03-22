@@ -383,12 +383,16 @@ const prestigeReset = () => {
  */
 const calculateHackingEfficiency = () => {
   let efficiency = 1;
+
+  upgradeDefinitions.filter(u => u.effectType == "hackingEfficiency" && u.purchased).forEach(upgrade => {
+    efficiency -= upgrade.effectValue;
+  });
   
-  // Apply efficiency upgrades
-  const efficiencyUpgrade = upgradeDefinitions.find(u => u.id === 1 && u.purchased);
-  if (efficiencyUpgrade) {
-    efficiency -= efficiencyUpgrade.effectValue; // 10% reduction in required attempts
-  }
+  // // Apply efficiency upgrades
+  // const efficiencyUpgrade = upgradeDefinitions.find(u => u.id === 1 && u.purchased);
+  // if (efficiencyUpgrade) {
+  //   efficiency -= efficiencyUpgrade.effectValue; // 10% reduction in required attempts
+  // }
   
   return efficiency;
 };
@@ -399,18 +403,26 @@ const calculateHackingEfficiency = () => {
  */
 const calculateBotnetMultiplier = () => {
   let multiplier = 1;
+
+  upgradeDefinitions.filter(u => u.effectType == "botnetBoost" && u.purchased).forEach(upgrade => {
+    multiplier += upgrade.effectValue;
+  });
+
+  upgradeDefinitions.filter(u => u.effectType == "botnetMultiplier" && u.purchased).forEach(upgrade => {
+    multiplier *= upgrade.effectValue;
+  });
+
+  // // Apply botnet boost upgrades
+  // const boostUpgrade = upgradeDefinitions.find(u => u.id === 2 && u.purchased);
+  // if (boostUpgrade) {
+  //   multiplier += boostUpgrade.effectValue; // +20% to all compromised devices
+  // }
   
-  // Apply botnet boost upgrades
-  const boostUpgrade = upgradeDefinitions.find(u => u.id === 2 && u.purchased);
-  if (boostUpgrade) {
-    multiplier += boostUpgrade.effectValue; // +20% to all compromised devices
-  }
-  
-  // Apply botnet multiplier upgrades
-  const multiplierUpgrade = upgradeDefinitions.find(u => u.id === 6 && u.purchased);
-  if (multiplierUpgrade) {
-    multiplier *= multiplierUpgrade.effectValue; // Double output
-  }
+  // // Apply botnet multiplier upgrades
+  // const multiplierUpgrade = upgradeDefinitions.find(u => u.id === 6 && u.purchased);
+  // if (multiplierUpgrade) {
+  //   multiplier *= multiplierUpgrade.effectValue; // Double output
+  // }
   
   // Apply master key tokens
   multiplier *= (1 + (gameState.masterKeyTokens * 0.1)); // +10% per token
