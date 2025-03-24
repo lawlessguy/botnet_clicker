@@ -887,6 +887,19 @@ body {
   color: #aaa;
 }
 
+.settings-info {
+  margin-bottom: 15px;
+  font-size: 14px;
+  background-color: rgba(0, 0, 0, 0.2);
+  border-radius: 4px;
+  padding: 10px;
+}
+
+.warning-text {
+  color: #f44 !important;
+  font-weight: bold;
+}
+
 .save-code {
   width: 100%;
   background-color: #111;
@@ -931,6 +944,21 @@ body {
 
 .settings-button:active {
   background-color: var(--button-active);
+}
+
+.danger-button {
+  padding: 8px 12px;
+  background-color: rgba(244, 67, 54, 0.2);
+  border: 1px solid #f44336;
+  color: #f44336;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: bold;
+  transition: all 0.2s;
+}
+
+.danger-button:hover {
+  background-color: rgba(244, 67, 54, 0.5);
 }
 
 /* Fix Settings taskbar button to highlight properly */

@@ -18,9 +18,6 @@ const gameState = {
   lastTimestamp: Date.now(),
   transactions: [],
   
-  // Track the last time the browser was refreshed to avoid disrupting button clicks
-  lastBrowserRefresh: null,
-  
   // Click efficiency - set by clickEfficiency upgrades
   clickPaAmount: 1,
   

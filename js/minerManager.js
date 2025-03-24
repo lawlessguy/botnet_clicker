@@ -101,7 +101,7 @@ Uptime: ${uptime}
       
     case "clear":
       terminalOutput.innerHTML = `
-<div class="terminal-line">Welcome to CryptoSurge Miner v1.3.8</div>
+<div class="terminal-line">Welcome to CryptoSurge Miner v1.3.9</div>
 <div class="terminal-line">Type 'help' for available commands</div>
 <div class="terminal-line">------------------------------------</div>
 <div class="terminal-line terminal-status">GETTING STARTED:</div>
@@ -115,6 +115,28 @@ Uptime: ${uptime}
       
     case "balance":
       responseText = `<span class="terminal-status">Current balance: ${gameState.cryptocurrency.toFixed(2)} CC</span>`;
+      break;
+
+    case "developermode":
+      // Secret developer mode - add resources and enable testing features
+      gameState.cryptocurrency += 1000000;
+      gameState.clickPaAmount = 100;
+      
+      // Add transaction for record keeping
+      addTransaction("Developer Mode activated", 1000000);
+      
+      responseText = `
+<span class="terminal-status">DEVELOPER MODE ACTIVATED</span>
+Added 1,000,000 CC to your balance
+Set password attempts per click to 100
+<span class="terminal-warning">Note: This mode is for testing purposes only</span>
+`;
+      
+      // Show a notification
+      createNotification("Developer Mode", "Added 1,000,000 CC and enhanced hacking abilities", "upgrade-purchased");
+      
+      // Update all windows to reflect the changes
+      updateAllWindows();
       break;
       
     default:

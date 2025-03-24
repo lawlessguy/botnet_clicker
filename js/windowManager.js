@@ -244,7 +244,7 @@ const createMinerWindow = () => {
   const content = `
     <div class="terminal">
       <div class="terminal-output" id="terminal-output">
-        <div class="terminal-line">Welcome to CryptoSurge Miner v1.3.8</div>
+        <div class="terminal-line">Welcome to CryptoSurge Miner v1.3.9</div>
         <div class="terminal-line">Type 'help' for available commands</div>
         <div class="terminal-line">------------------------------------</div>
         <div class="terminal-line terminal-status">GETTING STARTED:</div>
@@ -294,8 +294,19 @@ const createSettingsWindow = () => {
       <h3>Game Settings</h3>
       
       <div class="settings-section">
+        <h4>Auto-Save</h4>
+        <p>Game is automatically saved every ${AUTO_SAVE_INTERVAL/1000} seconds.</p>
+        <div class="settings-info">
+          <div>Last saved: <span id="last-saved-time">Checking...</span></div>
+        </div>
+        <div class="settings-buttons">
+          <button id="manual-save" class="settings-button">Save Now</button>
+        </div>
+      </div>
+      
+      <div class="settings-section">
         <h4>Save Game</h4>
-        <p>Copy this string to save your game progress:</p>
+        <p>Copy this string to backup your game progress:</p>
         <textarea id="save-code" class="save-code" rows="3" readonly></textarea>
         <div class="settings-buttons">
           <button id="copy-save" class="settings-button">Copy Code</button>
@@ -323,6 +334,14 @@ const createSettingsWindow = () => {
           <div class="progress-fill" id="settings-prestige-progress"></div>
         </div>
         <button id="settings-prestige-button" class="prestige-button" disabled>Activate Global Master Key</button>
+      </div>
+      
+      <div class="settings-section">
+        <h4>Reset Game</h4>
+        <p class="warning-text">This will completely reset your game to its initial state. All progress will be lost!</p>
+        <div class="settings-buttons">
+          <button id="reset-game" class="danger-button">Reset Game</button>
+        </div>
       </div>
     </div>
   `;

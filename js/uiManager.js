@@ -15,12 +15,11 @@ const updateHackConsole = () => {
   // Get purchased and uncompromised devices only
   const hackableDevices = allDevices.filter(device => device.isPurchased && !device.isCompromised);
   
-  // Calculate hacking efficiency
-  const hackingEfficiency = calculateHackingEfficiency();
-  
   // Add each device to the list
   hackableDevices.forEach(device => {
-    const adjustedRequired = Math.ceil(device.requiredAttempts * hackingEfficiency);
+    // Use device-specific efficiency calculation
+    const deviceEfficiency = calculateHackingEfficiency(device);
+    const adjustedRequired = Math.ceil(device.requiredAttempts * deviceEfficiency);
     
     const deviceElement = document.createElement("div");
     deviceElement.className = `target-item ${device.id === gameState.selectedTargetId ? "selected" : ""}`;
@@ -79,9 +78,9 @@ const updateHackProgress = () => {
   const selectedDevice = allDevices.find(d => d.id === gameState.selectedTargetId);
   
   if (selectedDevice) {
-    // Calculate hacking efficiency
-    const hackingEfficiency = calculateHackingEfficiency();
-    const adjustedRequired = Math.ceil(selectedDevice.requiredAttempts * hackingEfficiency);
+    // Use device-specific efficiency calculation
+    const deviceEfficiency = calculateHackingEfficiency(selectedDevice);
+    const adjustedRequired = Math.ceil(selectedDevice.requiredAttempts * deviceEfficiency);
     const currentProgress = Math.floor(selectedDevice.currentProgress);
     
     const progressPercent = (selectedDevice.currentProgress / adjustedRequired) * 100;
@@ -130,8 +129,12 @@ const updateBotnetControl = () => {
   // Clear the list completely
   machineList.innerHTML = "";
   
-  // Add each compromised device to the list
-  compromisedDevices.forEach(device => {
+  // Reverse the order of compromised devices to display newest first
+  // Create a copy of the array to avoid modifying the original
+  const reversedDevices = [...compromisedDevices].reverse();
+  
+  // Add each compromised device to the list (newest first)
+  reversedDevices.forEach(device => {
     const machineElement = document.createElement("div");
     machineElement.className = "machine-item";
     
@@ -317,9 +320,14 @@ const updateSettingsWindow = () => {
     prestigeButtonElement.disabled = gameState.totalPAThisRun < PRESTIGE_THRESHOLD;
   }
   
+  // Update last saved time
+  updateLastSavedTime();
+  
   // Add event listeners if not already added
   const copyButtonElement = document.getElementById("copy-save");
   const importSaveButtonElement = document.getElementById("import-save");
+  const manualSaveButtonElement = document.getElementById("manual-save");
+  const resetButtonElement = document.getElementById("reset-game");
   const prestigeButtonElement2 = document.getElementById("settings-prestige-button");
   
   if (copyButtonElement && !copyButtonElement.hasAttribute("data-has-listener")) {
@@ -348,6 +356,28 @@ const updateSettingsWindow = () => {
         loadSaveString(importCodeElement.value.trim());
       } else {
         createNotification("Error", "No save code provided", "error-notification");
+      }
+    });
+  }
+  
+  if (manualSaveButtonElement && !manualSaveButtonElement.hasAttribute("data-has-listener")) {
+    manualSaveButtonElement.setAttribute("data-has-listener", "true");
+    manualSaveButtonElement.addEventListener("click", () => {
+      const success = saveGameToLocalStorage(true); // Show notification
+      
+      if (success) {
+        // Update last saved time
+        updateLastSavedTime();
+      }
+    });
+  }
+  
+  if (resetButtonElement && !resetButtonElement.hasAttribute("data-has-listener")) {
+    resetButtonElement.setAttribute("data-has-listener", "true");
+    resetButtonElement.addEventListener("click", () => {
+      // Show a confirmation dialog
+      if (confirm("Are you sure you want to reset the game? All progress will be lost!")) {
+        resetGame();
       }
     });
   }

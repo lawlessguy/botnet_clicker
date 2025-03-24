@@ -169,17 +169,39 @@ const clickHack = () => {
   
   if (!device) return;
   
-  // Check for instant crack if the upgrade is purchased
+  // Check for instant crack if the upgrade is purchased and device has no progress yet
   const instantCrackUpgrades = upgradeDefinitions.filter(u => u.effectType === "instantCrack" && u.purchased);
   if (instantCrackUpgrades.length > 0 && device.currentProgress === 0) {
     // Use the highest value instant crack upgrade
     const bestInstantCrack = instantCrackUpgrades.reduce((best, current) => 
       current.effectValue > best.effectValue ? current : best, instantCrackUpgrades[0]);
     
-    if (Math.random() < bestInstantCrack.effectValue) {
-      const hackingEfficiency = calculateHackingEfficiency();
-      device.currentProgress = device.requiredAttempts * hackingEfficiency;
+    // Generate a random number between 0 and 1
+    const roll = Math.random();
+    console.log(`Instant crack check: rolled ${roll}, need < ${bestInstantCrack.effectValue}`);
+    
+    // If roll is below the chance threshold, instantly crack the device
+    if (roll < bestInstantCrack.effectValue) {
+      const hackingEfficiency = calculateHackingEfficiency(device);
+      const requiredAttempts = device.requiredAttempts * hackingEfficiency;
+      device.currentProgress = requiredAttempts; // Set to exact required amount
       createNotification("Instant Crack!", `Password database hit! ${device.name} instantly compromised.`, "upgrade-purchased");
+      
+      // Mark as compromised immediately
+      device.isCompromised = true;
+      
+      // Find and select the next available target
+      gameState.selectedTargetId = findNextAvailableTarget();
+      
+      // Update displays
+      updateHackConsole();
+      updateBotnetControl();
+      updatePerformanceWindow();
+      
+      // Force refresh the botnet panel
+      triggerBotnetRefresh();
+      
+      return; // Exit function early since device is already compromised
     }
   }
   
@@ -192,7 +214,7 @@ const clickHack = () => {
   gameState.hacking.progressCounter += clickPaAmount;
   
   // Check if device is now compromised
-  const hackingEfficiency = calculateHackingEfficiency();
+  const hackingEfficiency = calculateHackingEfficiency(device);
   const requiredAttempts = device.requiredAttempts * hackingEfficiency;
   
   if (device.currentProgress >= requiredAttempts) {
@@ -202,7 +224,7 @@ const clickHack = () => {
     // Ensure progress is exactly at required attempts for clean UI display
     device.currentProgress = requiredAttempts;
     
-    // Reset hacking state since device is compromised
+    // Reset hacking state
     gameState.hacking.isActive = false;
     
     createNotification("Target Compromised", `${device.name} has been added to your botnet!`, "machine-compromised");
@@ -274,6 +296,27 @@ const buyUpgrade = (upgradeId) => {
     gameState.cryptocurrency -= upgrade.costCC;
     upgrade.purchased = true;
     
+    // For hacking efficiency upgrades, mark only currently purchased uncompromised devices
+    if (upgrade.effectType === "hackingEfficiency") {
+      // Get all devices that are purchased but not compromised (in the Hack Console)
+      const uncompromisedDevices = allDevices.filter(d => d.isPurchased && !d.isCompromised);
+      
+      // Add the upgrade ID to each device's appliedEfficiencyUpgrades array
+      uncompromisedDevices.forEach(device => {
+        // Initialize the array if it doesn't exist
+        if (!device.appliedEfficiencyUpgrades) {
+          device.appliedEfficiencyUpgrades = [];
+        }
+        
+        // Add this upgrade to the device
+        device.appliedEfficiencyUpgrades.push(upgrade.id);
+        console.log(`Applied efficiency upgrade ${upgrade.id} to device ${device.name}`);
+      });
+      
+      // Log how many devices received the upgrade
+      console.log(`Applied efficiency upgrade ${upgrade.name} to ${uncompromisedDevices.length} devices`);
+    }
+    
     // Add transaction
     addTransaction(`Purchased ${upgrade.name}`, -upgrade.costCC);
     
@@ -298,21 +341,25 @@ const applyUpgradeEffect = (upgrade) => {
       break;
     case "userGPU":
       gameState.userGPU += upgrade.effectValue;
+      // Force update miner hash rate when GPU is upgraded
+      if (gameState.miner.isRunning) {
+        updateMinerHashRate();
+      }
       break;
     case "hackingEfficiency":
-      // This is applied when calculating required attempts
+      // This is now handled per-device based on appliedEfficiencyUpgrades
       break;
     case "botnetBoost":
-      // This is applied when calculating resource rates
+      // This is handled in calculateBotnetMultiplier()
       break;
     case "botnetMultiplier":
-      // This is applied when calculating resource rates
+      // This is handled in calculateBotnetMultiplier()
       break;
     case "instantCrack":
       // This is checked when clicking hack
       break;
     case "clickEfficiency":
-      // This affects the clickPaAmount
+      // Update the clickPaAmount with the correct value
       gameState.clickPaAmount = upgrade.effectValue;
       break;
     case "miningEfficiency":
@@ -323,74 +370,42 @@ const applyUpgradeEffect = (upgrade) => {
 };
 
 /**
- * Performs a prestige reset, keeping permanent progress
- */
-const prestigeReset = () => {
-  if (gameState.totalPAThisRun >= PRESTIGE_THRESHOLD) {
-    // Stop mining if it's running
-    if (gameState.miner.isRunning) {
-      stopMiner();
-    }
-    
-    // Calculate tokens to award
-    const tokensToAward = 1; // For simplicity, award 1 token per prestige
-    
-    // Reset game state
-    const previousTokens = gameState.masterKeyTokens;
-    
-    // Save tokens and restore minimal state
-    gameState.masterKeyTokens = previousTokens + tokensToAward;
-    gameState.selectedTargetId = null;
-    gameState.passwordAttempts = 0;
-    gameState.cryptocurrency = 0;
-    gameState.userCPU = 0;
-    gameState.userGPU = 0;
-    gameState.totalPAThisRun = 0;
-    gameState.pausedHackingProgress = {};
-    gameState.transactions = [];
-    
-    // Reset miner statistics
-    gameState.miner.totalMined = 0;
-    
-    // Reset all devices
-    allDevices.forEach(device => {
-      device.isCompromised = false;
-      device.currentProgress = 0;
-      device.hasMiner = false;
-      
-      // Reset purchase status
-      device.isPurchased = false;
-    });
-    
-    // Reset all upgrades
-    upgradeDefinitions.forEach(upgrade => {
-      upgrade.purchased = false;
-    });
-    
-    // Add transaction for prestige
-    addTransaction("Global Master Key Activated", "+1 Master Key Token");
-    
-    createNotification("Prestige Complete", `You've activated the Global Master Key and gained a token! Your botnet has been reset but with a permanent ${(tokensToAward * 10)}% boost.`, "upgrade-purchased");
-    
-    // Update all windows
-    updateAllWindows();
-  }
-};
-
-/**
  * Calculates the hacking efficiency based on upgrades
+ * @param {object} device - The device to calculate efficiency for
  * @returns {number} - Efficiency multiplier (lower is better)
  */
-const calculateHackingEfficiency = () => {
+const calculateHackingEfficiency = (device) => {
   let efficiency = 1;
   
-  // Apply efficiency upgrades
-  const efficiencyUpgrade = upgradeDefinitions.find(u => u.id === 1 && u.purchased);
-  if (efficiencyUpgrade) {
-    efficiency -= efficiencyUpgrade.effectValue; // 10% reduction in required attempts
+  // If no device provided, use the general efficiency calculation
+  if (!device) {
+    // Apply ALL efficiency upgrades
+    const efficiencyUpgrades = upgradeDefinitions.filter(u => 
+      u.effectType === "hackingEfficiency" && u.purchased);
+    
+    // Apply each purchased efficiency upgrade
+    for (const upgrade of efficiencyUpgrades) {
+      efficiency -= upgrade.effectValue;
+    }
+  } else {
+    // Use the device-specific efficiency calculation
+    
+    // If the device doesn't have the array, create it
+    if (!device.appliedEfficiencyUpgrades) {
+      device.appliedEfficiencyUpgrades = [];
+    }
+    
+    // Apply only the efficiency upgrades stored in the device's appliedEfficiencyUpgrades array
+    for (const upgradeId of device.appliedEfficiencyUpgrades) {
+      const upgrade = upgradeDefinitions.find(u => u.id === upgradeId);
+      if (upgrade && upgrade.purchased) {
+        efficiency -= upgrade.effectValue;
+      }
+    }
   }
   
-  return efficiency;
+  // Ensure efficiency doesn't go below some minimum value (e.g., 0.1)
+  return Math.max(0.1, efficiency);
 };
 
 /**
@@ -400,16 +415,22 @@ const calculateHackingEfficiency = () => {
 const calculateBotnetMultiplier = () => {
   let multiplier = 1;
   
-  // Apply botnet boost upgrades
-  const boostUpgrade = upgradeDefinitions.find(u => u.id === 2 && u.purchased);
-  if (boostUpgrade) {
-    multiplier += boostUpgrade.effectValue; // +20% to all compromised devices
+  // Apply ALL botnet boost upgrades, not just specific IDs
+  const boostUpgrades = upgradeDefinitions.filter(u => 
+    u.effectType === "botnetBoost" && u.purchased);
+  
+  // Apply each purchased boost upgrade - ADD to the multiplier (not set it)
+  for (const upgrade of boostUpgrades) {
+    multiplier += upgrade.effectValue; // ADD the boost percentage (not multiply)
   }
   
-  // Apply botnet multiplier upgrades
-  const multiplierUpgrade = upgradeDefinitions.find(u => u.id === 6 && u.purchased);
-  if (multiplierUpgrade) {
-    multiplier *= multiplierUpgrade.effectValue; // Double output
+  // Apply ALL botnet multiplier upgrades
+  const multiplierUpgrades = upgradeDefinitions.filter(u => 
+    u.effectType === "botnetMultiplier" && u.purchased);
+  
+  // Apply each purchased multiplier upgrade - MULTIPLY the result
+  for (const upgrade of multiplierUpgrades) {
+    multiplier *= upgrade.effectValue;
   }
   
   // Apply master key tokens
@@ -558,6 +579,11 @@ const purchaseDevice = (deviceId) => {
     gameState.cryptocurrency -= device.costCC;
     device.isPurchased = true;
     
+    // Initialize the appliedEfficiencyUpgrades array (will be empty for new devices)
+    if (!device.appliedEfficiencyUpgrades) {
+      device.appliedEfficiencyUpgrades = [];
+    }
+    
     // Add transaction
     addTransaction(`Purchased access to ${device.name}`, -device.costCC);
     
@@ -571,5 +597,63 @@ const purchaseDevice = (deviceId) => {
       gameState.selectedTargetId = device.id;
       updateHackConsole();
     }
+  }
+};
+
+/**
+ * Performs a prestige reset, keeping permanent progress
+ */
+const prestigeReset = () => {
+  if (gameState.totalPAThisRun >= PRESTIGE_THRESHOLD) {
+    // Stop mining if it's running
+    if (gameState.miner.isRunning) {
+      stopMiner();
+    }
+    
+    // Calculate tokens to award
+    const tokensToAward = 1; // For simplicity, award 1 token per prestige
+    
+    // Reset game state
+    const previousTokens = gameState.masterKeyTokens;
+    
+    // Save tokens and restore minimal state
+    gameState.masterKeyTokens = previousTokens + tokensToAward;
+    gameState.selectedTargetId = null;
+    gameState.passwordAttempts = 0;
+    gameState.cryptocurrency = 0;
+    gameState.userCPU = 0;
+    gameState.userGPU = 0;
+    gameState.totalPAThisRun = 0;
+    gameState.pausedHackingProgress = {};
+    gameState.transactions = [];
+    
+    // Reset miner statistics
+    gameState.miner.totalMined = 0;
+    
+    // Reset all devices
+    allDevices.forEach(device => {
+      device.isCompromised = false;
+      device.currentProgress = 0;
+      device.hasMiner = false;
+      
+      // Clear efficiency upgrades when resetting
+      device.appliedEfficiencyUpgrades = [];
+      
+      // Reset purchase status
+      device.isPurchased = false;
+    });
+    
+    // Reset all upgrades
+    upgradeDefinitions.forEach(upgrade => {
+      upgrade.purchased = false;
+    });
+    
+    // Add transaction for prestige
+    addTransaction("Global Master Key Activated", "+1 Master Key Token");
+    
+    createNotification("Prestige Complete", `You've activated the Global Master Key and gained a token! Your botnet has been reset but with a permanent ${(tokensToAward * 10)}% boost.`, "upgrade-purchased");
+    
+    // Update all windows
+    updateAllWindows();
   }
 };

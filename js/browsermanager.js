@@ -151,87 +151,13 @@ const navigateBrowser = (page) => {
   }
   
   addressBar.textContent = address;
-  
-  // Add event listeners to the browser navigation elements
-  setupBrowserEvents();
 };
 
 /**
  * Sets up event listeners for all browser elements
+ * Note: This is now handled by the event delegation system in main.js
  */
 const setupBrowserEvents = () => {
-  // Back button - always goes home (simplified to avoid freezes)
-  const backButton = document.getElementById("browser-back");
-  if (backButton) {
-    // Remove any existing event listeners by cloning and replacing the element
-    const newBackButton = backButton.cloneNode(true);
-    backButton.parentNode.replaceChild(newBackButton, backButton);
-    
-    newBackButton.addEventListener("click", () => {
-      // Always navigate to home page regardless of current page
-      navigateBrowser("home");
-    });
-  }
-  
-  // Refresh button - now just decorative, no functionality
-  const refreshButton = document.getElementById("browser-refresh");
-  if (refreshButton) {
-    // Remove any existing event listeners by cloning and replacing the element
-    const newRefreshButton = refreshButton.cloneNode(true);
-    refreshButton.parentNode.replaceChild(newRefreshButton, refreshButton);
-    
-    // No functionality added
-  }
-  
-  // Use event delegation for browser content to prevent missing clicks during refreshes
-  const browserContent = document.getElementById("browser-content");
-  if (browserContent && !browserContent.hasAttribute("data-has-listeners")) {
-    browserContent.setAttribute("data-has-listeners", "true");
-    
-    // Add a single event listener to the container that handles all click events
-    browserContent.addEventListener("click", (event) => {
-      // Site links
-      if (event.target.closest(".site-link")) {
-        const link = event.target.closest(".site-link");
-        const page = link.getAttribute("data-page");
-        if (page) {
-          navigateBrowser(page);
-        }
-        return;
-      }
-      
-      // Back to home button
-      if (event.target.id === "back-to-home" || event.target.closest("#back-to-home")) {
-        navigateBrowser("home");
-        return;
-      }
-      
-      // Upgrade purchase buttons
-      if (event.target.closest(".purchase-button[data-upgrade-id]")) {
-        const button = event.target.closest(".purchase-button[data-upgrade-id]");
-        if (!button.disabled) {
-          const upgradeId = parseInt(button.getAttribute("data-upgrade-id"));
-          buyUpgrade(upgradeId);
-          // Refresh the page to show the updated state
-          navigateBrowser("marketplace");
-        }
-        return;
-      }
-      
-      // Device purchase buttons
-      if (event.target.closest(".purchase-button[data-device-id]")) {
-        const button = event.target.closest(".purchase-button[data-device-id]");
-        if (!button.disabled) {
-          const deviceId = parseInt(button.getAttribute("data-device-id"));
-          purchaseDevice(deviceId);
-          // Refresh the page to show the updated state
-          navigateBrowser("forum");
-        }
-        return;
-      }
-    });
-  }
-  
-  // We don't need these individual button handlers anymore
-  // They're replaced by the event delegation above
+  // All browser event functionality is now handled by event delegation in main.js
+  // This method is kept for compatibility, but no longer attaches event listeners directly
 };
